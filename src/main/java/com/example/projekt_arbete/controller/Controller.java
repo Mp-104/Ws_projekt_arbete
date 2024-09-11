@@ -1,5 +1,6 @@
 package com.example.projekt_arbete.controller;
 
+import com.example.projekt_arbete.Keys;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -10,13 +11,11 @@ import reactor.core.publisher.Mono;
 @RequestMapping("/films")
 public class Controller {
 
-    private String ApiKey;
-
     private final WebClient webClientConfig;
 
     public Controller (WebClient.Builder webClient) {
         this.webClientConfig = webClient
-                .baseUrl("https://api.themoviedb.org/3/movie/550?api_key=" + ApiKey)
+                .baseUrl("https://api.themoviedb.org/3/movie/550?api_key=" + Keys.ApiKey)
                 .build();
     }
 

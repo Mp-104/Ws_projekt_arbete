@@ -10,6 +10,7 @@ public class FilmModel {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int filmid;
     private int id;
     private String original_title;
 

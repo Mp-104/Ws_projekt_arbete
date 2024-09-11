@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+import java.util.Optional;
+
 @RestController
 @RequestMapping("/films")
 public class Controller {
@@ -44,22 +46,23 @@ public class Controller {
     }
 
     @PostMapping("/{id}")
-    public ResponseEntity<FilmModel> saveFilmById (@RequestParam(defaultValue = "movie") String movie, @PathVariable int id) {
+    public ResponseEntity<Optional<FilmModel>> saveFilmById (@RequestParam(defaultValue = "movie") String movie, @PathVariable int id) {
 
-        FilmModel response = webClientConfig.get()
+        //Optional
+        Optional<FilmModel> response = Optional.ofNullable(webClientConfig.get()
                 .uri(film -> film
                         .path(movie + "/" + id)
                         .queryParam("api_key", Keys.ApiKey)
                         .build())
                 .retrieve()
                 .bodyToMono(FilmModel.class)
-                .block();
+                .block());
 
 
         // Suggested by IntelliJ, ingen aning hur det fungerar
-        assert response != null;
+        assert response.isPresent();
 
-        filmService.save(response);
+        filmService.save(response.get());
 
         return ResponseEntity.status(201).body(response);
 

@@ -5,6 +5,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 
+import java.util.List;
+
 @Entity
 public class FilmModel {
 
@@ -13,6 +15,15 @@ public class FilmModel {
     private int filmid;
     private int id;
     private String original_title;
+    private List<String> origin_country;
+
+    public List<String> getOrigin_country() {
+        return origin_country;
+    }
+
+    public void setOrigin_country(List<String> origin_country) {
+        this.origin_country = origin_country;
+    }
 
     public int getId () {
         return id;

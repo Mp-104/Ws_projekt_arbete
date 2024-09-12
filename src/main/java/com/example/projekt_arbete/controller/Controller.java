@@ -5,18 +5,19 @@ import com.example.projekt_arbete.model.FilmModel;
 import com.example.projekt_arbete.repository.FilmRepository;
 import com.example.projekt_arbete.service.IFilmService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Repository;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @RestController
 @RequestMapping("/films")
 public class Controller {
 
-    //private final FilmRepository filmRepository;
+    private final FilmRepository filmRepository;
 
     private final IFilmService filmService;
 
@@ -26,7 +27,7 @@ public class Controller {
         this.webClientConfig = webClient
                 .baseUrl("https://api.themoviedb.org/3/")
                 .build();
-        //this.filmRepository = repository;
+        this.filmRepository = repository;
         this.filmService = filmService;
     }
 
@@ -67,5 +68,47 @@ public class Controller {
         return ResponseEntity.status(201).body(response);
 
     }
+
+    @GetMapping("/savedfilms")
+    public ResponseEntity<List<FilmModel>> getSavedFilms () {
+
+        //return filmRepository.findAll();
+        return ResponseEntity.ok(filmService.findAll());
+    }
+
+    @PutMapping ("/savedfilms/{id}")
+    public ResponseEntity<FilmModel> changeCountryOfOrigin (@PathVariable("id") int id, @RequestBody String country) {
+
+        //return filmRepository.findAll();
+        List<FilmModel> filmList = filmService.findAll();
+
+
+        List<String> newCountryOfOrigins = new ArrayList<>() {};
+
+        newCountryOfOrigins.add(country);
+
+        //filmList.get(id).setOrigin_country(newCountryOfOrigins);
+
+        //FilmModel film = filmList.get(id);
+
+        filmService.findById(id).get().setOrigin_country(newCountryOfOrigins);
+
+
+        filmService.save(filmService.findById(id).get());
+
+        return ResponseEntity.status(200).body(filmService.findById(id).get());
+        //return filmService.save(film);
+
+    }
+
+    @DeleteMapping("/savedfilms/{id}")
+    public ResponseEntity<String> deleteFilmById (@PathVariable("id") Integer id) {
+        filmService.deleteById(id);
+
+        return ResponseEntity.ok("Deleted");
+
+    }
+
+
 
 }

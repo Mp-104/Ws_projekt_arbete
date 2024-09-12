@@ -10,5 +10,5 @@ public interface IFilmService {
     FilmModel save (FilmModel film);
     List<FilmModel> findAll ();
     Optional<FilmModel> findById (Integer id);
-    void deleteById (Integer id);
+    void deleteById (Integer id) throws Exception;
 }

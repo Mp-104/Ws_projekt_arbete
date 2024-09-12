@@ -31,13 +31,18 @@ public class FilmService implements IFilmService{
     }
 
     @Override
-    public void deleteById (Integer id) {
+    public void deleteById (Integer id) throws Exception {
 
         assert filmRepository.findById(id).isPresent();
+        if (filmRepository.findById(id).isPresent()) {
+            filmRepository.deleteById(id);
+        } else {
+            throw new Exception("No film found with id: " + id);
+        }
 
         //filmRepository.findById(id).get();
 
-        filmRepository.deleteById(id);
+
 
     }
 }

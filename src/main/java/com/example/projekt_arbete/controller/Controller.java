@@ -102,10 +102,15 @@ public class Controller {
     }
 
     @DeleteMapping("/savedfilms/{id}")
-    public ResponseEntity<String> deleteFilmById (@PathVariable("id") Integer id) {
-        filmService.deleteById(id);
+    public ResponseEntity<String> deleteFilmById (@PathVariable("id") Integer id) throws Exception {
+        try {
+            filmService.deleteById(id);
 
-        return ResponseEntity.ok("Deleted");
+            return ResponseEntity.ok("Film with id "+ id + " Deleted");
+        } catch (Exception e) {
+            return ResponseEntity.status(404).body("No film with id:" + id + " found");
+        }
+
 
     }
 

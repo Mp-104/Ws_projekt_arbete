@@ -16,6 +16,24 @@ public class FilmModel {
     private int id;
     private String original_title;
     private List<String> origin_country;
+    private String opinion;
+    private int runtime;
+
+    public int getRuntime() {
+        return runtime;
+    }
+
+    public void setRuntime(int runtime) {
+        this.runtime = runtime;
+    }
+
+    public String getOpinion() {
+        return opinion;
+    }
+
+    public void setOpinion(String opinion) {
+        this.opinion = opinion;
+    }
 
     public List<String> getOrigin_country() {
         return origin_country;

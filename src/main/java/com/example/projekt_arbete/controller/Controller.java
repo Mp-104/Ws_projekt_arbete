@@ -13,6 +13,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+// TODO - More error handling, but probably in FilmService class
+
 @RestController
 @RequestMapping("/films")
 public class Controller {
@@ -46,6 +48,7 @@ public class Controller {
 
     }
 
+    //TODO - Make sure that films with same name or id cannot be saved, otherwise you can add many of the same films
     @PostMapping("/{id}")
     public ResponseEntity<Optional<FilmModel>> saveFilmById (@RequestParam(defaultValue = "movie") String movie, @PathVariable int id) {
 
@@ -76,6 +79,7 @@ public class Controller {
         return ResponseEntity.ok(filmService.findAll());
     }
 
+    //TODO - needs more work
     @PutMapping ("/savedfilms/{id}")
     public ResponseEntity<FilmModel> changeCountryOfOrigin (@PathVariable("id") int id, @RequestBody String country) {
 
@@ -101,6 +105,19 @@ public class Controller {
 
     }
 
+    @PutMapping("/savedfilms/opinion/{id}")
+    public ResponseEntity<String> addOpinion (@PathVariable("id") Integer id, @RequestBody String opinion) {
+
+        if (filmService.findById(id).isPresent()) {
+            filmService.findById(id).get().setOpinion(opinion);
+            filmService.save(filmService.findById(id).get());
+            return ResponseEntity.status(201).body("Opinion added!");
+        } else {
+            return ResponseEntity.status(404).body("could not find film");
+        }
+
+    }
+
     @DeleteMapping("/savedfilms/{id}")
     public ResponseEntity<String> deleteFilmById (@PathVariable("id") Integer id) throws Exception {
         try {
@@ -111,9 +128,23 @@ public class Controller {
             return ResponseEntity.status(404).body("No film with id:" + id + " found");
         }
 
-
     }
 
+    @GetMapping("/savedfilms/runtime")
+    public ResponseEntity<Integer> getTotalRuntime () {
+
+        List<FilmModel> films = filmService.findAll();
+
+        int runtimeInMin = 0;
+
+        for(FilmModel film : films) {
+
+            runtimeInMin += film.getRuntime();
+
+        }
+
+        return ResponseEntity.ok(runtimeInMin/filmService.findAll().size());
+    }
 
 
 }

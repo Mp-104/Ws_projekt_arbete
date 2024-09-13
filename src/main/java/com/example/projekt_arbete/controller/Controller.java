@@ -3,6 +3,8 @@ package com.example.projekt_arbete.controller;
 import com.example.projekt_arbete.Keys;
 import com.example.projekt_arbete.model.FilmModel;
 import com.example.projekt_arbete.repository.FilmRepository;
+import com.example.projekt_arbete.response.ErrorResponse;
+import com.example.projekt_arbete.response.Response;
 import com.example.projekt_arbete.service.IFilmService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -144,6 +146,26 @@ public class Controller {
         }
 
         return ResponseEntity.ok(runtimeInMin/filmService.findAll().size());
+    }
+
+    // TODO -- Replace Object with a response - interface?
+    @GetMapping("/search/{filmName}")
+    public ResponseEntity<Response> searchByTitle (@PathVariable("filmName") String filmName) {
+
+        List<FilmModel> allFilms = filmService.findAll();
+
+        for (FilmModel film : allFilms) {
+
+            if (film.getOriginal_title().equals(filmName)) {
+
+                return ResponseEntity.ok(film);
+            } else {
+                return ResponseEntity.status(404).body(new ErrorResponse("no film with name: " + filmName));
+            }
+        }
+
+
+        return ResponseEntity.status(100).body(new ErrorResponse("Please enter search title"));
     }
 
 

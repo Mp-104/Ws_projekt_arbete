@@ -38,6 +38,5 @@ out/
 
 Keys.java
 
-src/main/resources/application.properties
-application.properties
-src/main/resources/mykeystore.p12
+###src/main/resources/application.properties
+###src/main/resources/mykeystore.p12

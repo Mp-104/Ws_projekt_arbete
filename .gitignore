@@ -37,3 +37,7 @@ out/
 .vscode/
 
 Keys.java
+
+src/main/resources/application.properties
+application.properties
+src/main/resources/mykeystore.p12

@@ -1,6 +1,7 @@
 package com.example.projekt_arbete.service;
 
 import com.example.projekt_arbete.model.FilmModel;
+import org.springframework.http.ResponseEntity;
 
 import java.util.List;
 import java.util.Optional;
@@ -10,5 +11,5 @@ public interface IFilmService {
     FilmModel save (FilmModel film);
     List<FilmModel> findAll ();
     Optional<FilmModel> findById (Integer id);
-    void deleteById (Integer id) throws Exception;
+    ResponseEntity<String> deleteById (Integer id) throws Exception;
 }

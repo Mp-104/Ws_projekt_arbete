@@ -35,6 +35,7 @@ public class Controller {
         this.filmService = filmService;
     }
 
+    // TODO - Error handle this shit: internal server error 500 if no film is found
     @GetMapping("/{id}")
     public ResponseEntity<Mono<FilmModel>> getFilmById (@RequestParam(defaultValue = "movie") String movie, @PathVariable int id) {
 
@@ -122,13 +123,15 @@ public class Controller {
 
     @DeleteMapping("/savedfilms/{id}")
     public ResponseEntity<String> deleteFilmById (@PathVariable("id") Integer id) throws Exception {
-        try {
-            filmService.deleteById(id);
+        return filmService.deleteById(id);
 
-            return ResponseEntity.ok("Film with id "+ id + " Deleted");
-        } catch (Exception e) {
-            return ResponseEntity.status(404).body("No film with id:" + id + " found");
-        }
+//        try {
+//
+//
+//            return ResponseEntity.ok("Film with id "+ id + " Deleted");
+//        } catch (Exception e) {
+//            return ResponseEntity.status(404).body("No film with id:" + id + " found");
+//        }
 
     }
 
@@ -149,7 +152,7 @@ public class Controller {
     }
 
     // TODO -- Replace Object with a response - interface?
-    @GetMapping("/search/{filmName}")
+    @GetMapping("/search/f={filmName}")
     public ResponseEntity<Response> searchByTitle (@PathVariable("filmName") String filmName) {
 
         List<FilmModel> allFilms = filmService.findAll();

@@ -3,6 +3,7 @@ package com.example.projekt_arbete.service;
 import com.example.projekt_arbete.model.FilmModel;
 import com.example.projekt_arbete.repository.FilmRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -31,14 +32,21 @@ public class FilmService implements IFilmService{
     }
 
     @Override
-    public void deleteById (Integer id) throws Exception {
+    public ResponseEntity<String> deleteById (Integer id) throws Exception {
 
         assert filmRepository.findById(id).isPresent();
-        if (filmRepository.findById(id).isPresent()) {
-            filmRepository.deleteById(id);
-        } else {
-            throw new Exception("No film found with id: " + id);
+        try {
+            if (filmRepository.findById(id).isPresent()) {
+                filmRepository.deleteById(id);
+                return ResponseEntity.ok("Film with id "+ id + " Deleted");
+            } else {
+                //throw new Exception("No film found with id: " + id);
+                return ResponseEntity.status(404).body("no film found with id: " + id);
+            }
+        } catch (Exception e) {
+            throw new Exception();
         }
+
 
         //filmRepository.findById(id).get();
 

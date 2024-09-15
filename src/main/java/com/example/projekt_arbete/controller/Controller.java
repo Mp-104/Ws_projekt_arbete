@@ -9,6 +9,7 @@ import com.example.projekt_arbete.service.IFilmService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
@@ -53,25 +54,47 @@ public class Controller {
 
     //TODO - Make sure that films with same name or id cannot be saved, otherwise you can add many of the same films
     @PostMapping("/{id}")
-    public ResponseEntity<Optional<FilmModel>> saveFilmById (@RequestParam(defaultValue = "movie") String movie, @PathVariable int id) {
+    public ResponseEntity<Response> saveFilmById (@RequestParam(defaultValue = "movie") String movie, @PathVariable int id) {
 
-        //Optional
-        Optional<FilmModel> response = Optional.ofNullable(webClientConfig.get()
-                .uri(film -> film
-                        .path(movie + "/" + id)
-                        .queryParam("api_key", Keys.ApiKey)
-                        .build())
-                .retrieve()
-                .bodyToMono(FilmModel.class)
-                .block());
+        try {
 
 
-        // Suggested by IntelliJ, ingen aning hur det fungerar
-        assert response.isPresent();
+            //Optional
+            Optional<FilmModel> response = Optional.ofNullable(webClientConfig.get()
+                    .uri(film -> film
+                            .path(movie + "/" + id)
+                            .queryParam("api_key", Keys.ApiKey)
+                            .build())
+                    .retrieve()
+                    .bodyToMono(FilmModel.class)
+                    .block());
 
-        filmService.save(response.get());
 
-        return ResponseEntity.status(201).body(response);
+            //if (response.isEmpty()) {
+            //    return ResponseEntity.status(404).body(new ErrorResponse("film inte hittad"));
+            //}
+            // Suggested by IntelliJ, ingen aning hur det fungerar
+            assert response.isPresent();
+
+            List<FilmModel> allFilms = filmService.findAll();
+
+            for (FilmModel film : allFilms) {
+                System.out.println("for each film.getId(): " + film.getId());
+
+                if (film.getId() == response.get().getId()) {
+
+                    return ResponseEntity.ok(new ErrorResponse("Filmen redan sparad :) "));
+                }
+
+            }
+
+            filmService.save(response.get());
+
+            return ResponseEntity.status(201).body(response.get());
+
+        } catch (WebClientResponseException e) {
+            return ResponseEntity.status(404).body(new ErrorResponse("film inte funnen"));
+        }
 
     }
 

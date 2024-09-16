@@ -7,6 +7,7 @@ import com.example.projekt_arbete.response.ErrorResponse;
 import com.example.projekt_arbete.response.Response;
 import com.example.projekt_arbete.service.IFilmService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
@@ -38,26 +39,33 @@ public class Controller {
 
     // TODO - Error handle this shit: internal server error 500 if no film is found
     @GetMapping("/{id}")
-    public ResponseEntity<Mono<FilmModel>> getFilmById (@RequestParam(defaultValue = "movie") String movie, @PathVariable int id) {
+    public ResponseEntity<Response> getFilmById (@RequestParam(defaultValue = "movie") String movie, @PathVariable int id) {
 
-        Mono<FilmModel> response = webClientConfig.get()
-                .uri(film -> film
-                        .path(movie + "/" + id)
-                        .queryParam("api_key", Keys.ApiKey)
-                        .build())
-                .retrieve()
-                .bodyToMono(FilmModel.class);
+        try {
 
-        return ResponseEntity.ok(response);
+            Optional<FilmModel> response = Optional.ofNullable(webClientConfig.get()
+                    .uri(film -> film
+                            .path(movie + "/" + id)
+                            .queryParam("api_key", Keys.ApiKey)
+                            .build())
+                    .retrieve()
+                    .bodyToMono(FilmModel.class)
+                    .block());
+
+            assert response.isPresent();
+            return ResponseEntity.ok(response.get());
+
+        } catch (WebClientResponseException e) {
+            return ResponseEntity.status(404).body(new ErrorResponse("Ingen sån film"));
+        }
 
     }
 
-    //TODO - Make sure that films with same name or id cannot be saved, otherwise you can add many of the same films
+    //TODO - Make sure that films with same name or id cannot be saved, otherwise you can add many of the same films - DONE!
     @PostMapping("/{id}")
     public ResponseEntity<Response> saveFilmById (@RequestParam(defaultValue = "movie") String movie, @PathVariable int id) {
 
         try {
-
 
             //Optional
             Optional<FilmModel> response = Optional.ofNullable(webClientConfig.get()
@@ -101,34 +109,21 @@ public class Controller {
     @GetMapping("/savedfilms")
     public ResponseEntity<List<FilmModel>> getSavedFilms () {
 
-        //return filmRepository.findAll();
         return ResponseEntity.ok(filmService.findAll());
     }
 
     //TODO - needs more work/error handling Optional?
     @PutMapping ("/savedfilms/{id}")
-    public ResponseEntity<FilmModel> changeCountryOfOrigin (@PathVariable("id") int id, @RequestBody String country) {
+    public ResponseEntity<Response> changeCountryOfOrigin (@PathVariable("id") int id, @RequestBody String country) {
 
-        //return filmRepository.findAll();
-        List<FilmModel> filmList = filmService.findAll();
+        return filmService.changeCountryOfOrigin(id, country);
 
-
-        List<String> newCountryOfOrigins = new ArrayList<>() {};
-
-        newCountryOfOrigins.add(country);
-
-        //filmList.get(id).setOrigin_country(newCountryOfOrigins);
-
-        //FilmModel film = filmList.get(id);
-
-        filmService.findById(id).get().setOrigin_country(newCountryOfOrigins);
-
-
-        filmService.save(filmService.findById(id).get());
-
-        return ResponseEntity.status(200).body(filmService.findById(id).get());
-        //return filmService.save(film);
-
+        //List<String> newCountryOfOrigins = new ArrayList<>() {};
+        //newCountryOfOrigins.add(country);
+        //assert filmService.findById(id).isPresent();
+        //filmService.findById(id).get().setOrigin_country(newCountryOfOrigins);
+        //filmService.save(filmService.findById(id).get());
+        //return ResponseEntity.ok(filmService.findById(id).get());
     }
 
     @PutMapping("/savedfilms/opinion/{id}")

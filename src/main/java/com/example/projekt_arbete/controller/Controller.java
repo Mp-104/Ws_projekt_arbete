@@ -4,6 +4,7 @@ import com.example.projekt_arbete.Keys;
 import com.example.projekt_arbete.model.FilmModel;
 import com.example.projekt_arbete.repository.FilmRepository;
 import com.example.projekt_arbete.response.ErrorResponse;
+import com.example.projekt_arbete.response.ListResponse;
 import com.example.projekt_arbete.response.Response;
 import com.example.projekt_arbete.service.IFilmService;
 import org.springframework.http.ResponseEntity;
@@ -188,14 +189,18 @@ public class Controller {
         return ResponseEntity.status(204).body(new ErrorResponse("Please enter search title"));
     }
 
+    //TODO - Error handle and move code to relevant FilmService method
+    //Example url: https://localhost:8443/films/country/US?title=Fight%20Club
     @GetMapping("/country/{country}")
-    public ResponseEntity<List<FilmModel>> getFilmsByCountry (@PathVariable("country") String country, @RequestParam(value = "title", required = false) String title) {
+    public ResponseEntity<Response> getFilmsByCountry (@PathVariable("country") String country, @RequestParam(value = "title", required = false) String title) {
+
+        List<FilmModel> savedFilms = filmService.findAll();
 
         List<FilmModel> filmsByCountry = new ArrayList<>();
 
         if (title == null || title.isBlank()) {
 
-            for (FilmModel film : filmService.findAll()) {
+            for (FilmModel film : savedFilms) {
 
                 if (film.getOrigin_country().get(0).equals(country)) {
 
@@ -203,14 +208,14 @@ public class Controller {
                 }
             }
 
-            return ResponseEntity.ok(filmsByCountry);
+            return ResponseEntity.ok(new ListResponse(filmsByCountry));
         }
 
-        for (FilmModel film : filmService.findAll()) {
+        for (FilmModel film : savedFilms) {
 
             if (film.getOrigin_country().get(0).equals(country) && film.getOriginal_title().equals(title)) {
 
-                return ResponseEntity.ok(Collections.singletonList(film));
+                return ResponseEntity.ok(film);
             }
         }
         return null;

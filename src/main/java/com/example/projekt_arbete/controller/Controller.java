@@ -7,13 +7,12 @@ import com.example.projekt_arbete.response.ErrorResponse;
 import com.example.projekt_arbete.response.Response;
 import com.example.projekt_arbete.service.IFilmService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
-import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -170,8 +169,8 @@ public class Controller {
     }
 
     // TODO -- Replace Object with a response - interface?
-    @GetMapping("/search/f={filmName}")
-    public ResponseEntity<Response> searchByTitle (@PathVariable("filmName") String filmName) {
+    @GetMapping("/search")
+    public ResponseEntity<Response> searchByTitle (@RequestParam String filmName) {
 
         List<FilmModel> allFilms = filmService.findAll();
 
@@ -186,8 +185,37 @@ public class Controller {
         }
 
 
-        return ResponseEntity.status(100).body(new ErrorResponse("Please enter search title"));
+        return ResponseEntity.status(204).body(new ErrorResponse("Please enter search title"));
     }
+
+    @GetMapping("/country/{country}")
+    public ResponseEntity<List<FilmModel>> getFilmsByCountry (@PathVariable("country") String country, @RequestParam(value = "title", required = false) String title) {
+
+        List<FilmModel> filmsByCountry = new ArrayList<>();
+
+        if (title == null || title.isBlank()) {
+
+            for (FilmModel film : filmService.findAll()) {
+
+                if (film.getOrigin_country().get(0).equals(country)) {
+
+                    filmsByCountry.add(film);
+                }
+            }
+
+            return ResponseEntity.ok(filmsByCountry);
+        }
+
+        for (FilmModel film : filmService.findAll()) {
+
+            if (film.getOrigin_country().get(0).equals(country) && film.getOriginal_title().equals(title)) {
+
+                return ResponseEntity.ok(Collections.singletonList(film));
+            }
+        }
+        return null;
+    }
+
 
 
 }

@@ -23,23 +23,23 @@ import java.util.Optional;
 @RequestMapping("/films")
 public class Controller {
 
-    private final FilmRepository filmRepository;
+    //private final FilmRepository filmRepository;
 
     private final IFilmService filmService;
 
     private final WebClient webClientConfig;
 
-    public Controller(WebClient.Builder webClient, IFilmService filmService, FilmRepository repository) {
+    public Controller (WebClient.Builder webClient, IFilmService filmService, FilmRepository repository) {
         this.webClientConfig = webClient
                 .baseUrl("https://api.themoviedb.org/3/")
                 .build();
-        this.filmRepository = repository;
+        //this.filmRepository = repository;
         this.filmService = filmService;
     }
 
     // TODO - Error handle this shit: internal server error 500 if no film is found
     @GetMapping("/{id}")
-    public ResponseEntity<Response> getFilmById(@RequestParam(defaultValue = "movie") String movie, @PathVariable int id) {
+    public ResponseEntity<Response> getFilmById (@RequestParam(defaultValue = "movie") String movie, @PathVariable int id) {
 
         try {
 
@@ -63,7 +63,7 @@ public class Controller {
 
     //TODO - Make sure that films with same name or id cannot be saved, otherwise you can add many of the same films - DONE!
     @PostMapping("/{id}")
-    public ResponseEntity<Response> saveFilmById(@RequestParam(defaultValue = "movie") String movie, @PathVariable int id) {
+    public ResponseEntity<Response> saveFilmById (@RequestParam(defaultValue = "movie") String movie, @PathVariable int id) {
 
         try {
 
@@ -107,14 +107,14 @@ public class Controller {
     }
 
     @GetMapping("/savedfilms")
-    public ResponseEntity<List<FilmModel>> getSavedFilms() {
+    public ResponseEntity<List<FilmModel>> getSavedFilms () {
 
         return ResponseEntity.ok(filmService.findAll());
     }
 
     //TODO - needs more work/error handling Optional?
     @PutMapping("/savedfilms/{id}")
-    public ResponseEntity<Response> changeCountryOfOrigin(@PathVariable("id") int id, @RequestBody String country) {
+    public ResponseEntity<Response> changeCountryOfOrigin (@PathVariable("id") int id, @RequestBody String country) {
 
         return filmService.changeCountryOfOrigin(id, country);
 
@@ -127,7 +127,7 @@ public class Controller {
     }
 
     @PutMapping("/savedfilms/opinion/{id}")
-    public ResponseEntity<String> addOpinion(@PathVariable("id") Integer id, @RequestBody String opinion) {
+    public ResponseEntity<String> addOpinion (@PathVariable("id") Integer id, @RequestBody String opinion) {
 
         if (filmService.findById(id).isPresent()) {
             filmService.findById(id).get().setOpinion(opinion);
@@ -140,7 +140,7 @@ public class Controller {
     }
 
     @DeleteMapping("/savedfilms/{id}")
-    public ResponseEntity<String> deleteFilmById(@PathVariable("id") Integer id) throws Exception {
+    public ResponseEntity<String> deleteFilmById (@PathVariable("id") Integer id) throws Exception {
         return filmService.deleteById(id);
 
 //        try {
@@ -153,20 +153,11 @@ public class Controller {
 
     }
 
+    //TODO - Error handle 500 internal error cannot divide by 0 zero
     @GetMapping("/savedfilms/runtime")
-    public ResponseEntity<Integer> getTotalRuntime() {
+    public ResponseEntity<Integer> getAverageRuntime () {
 
-        List<FilmModel> films = filmService.findAll();
-
-        int runtimeInMin = 0;
-
-        for (FilmModel film : films) {
-
-            runtimeInMin += film.getRuntime();
-
-        }
-
-        return ResponseEntity.ok(runtimeInMin / filmService.findAll().size());
+        return filmService.getAverageRuntime();
     }
 
     // example url: "https://localhost:8443/films/search?filmName=Reservoir%20Dogs"
@@ -179,7 +170,7 @@ public class Controller {
     //TODO - Error handle and move code to relevant FilmService method
     //Example url: https://localhost:8443/films/country/US?title=Fight%20Club
     @GetMapping("/country/{country}")
-    public ResponseEntity<Response> getFilmsByCountry(@PathVariable("country") String country, @RequestParam(value = "title", required = false) String title) {
+    public ResponseEntity<Response> getFilmsByCountry (@PathVariable("country") String country, @RequestParam(value = "title", required = false) String title) {
 
         return filmService.getFilmByCountry(country, title);
     }

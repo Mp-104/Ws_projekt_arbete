@@ -29,12 +29,12 @@ public class FilmService implements IFilmService{
     }
 
     @Override
-    public List<FilmModel> findAll() {
+    public List<FilmModel> findAll () {
         return filmRepository.findAll();
     }
 
     @Override
-    public Optional<FilmModel> findById(Integer id) {
+    public Optional<FilmModel> findById (Integer id) {
         return filmRepository.findById(id);
     }
 
@@ -57,7 +57,7 @@ public class FilmService implements IFilmService{
     }
 
     @Override
-    public ResponseEntity<Response> changeCountryOfOrigin(@PathVariable("id") int id, @RequestBody String country) {
+    public ResponseEntity<Response> changeCountryOfOrigin (@PathVariable("id") int id, @RequestBody String country) {
 
         List<String> newCountryOfOrigins = new ArrayList<>() {};
 
@@ -87,7 +87,7 @@ public class FilmService implements IFilmService{
     }
 
     @Override
-    public ResponseEntity<Response> searchFilmByName(String filmName) {
+    public ResponseEntity<Response> searchFilmByName (String filmName) {
 
         if (filmName == null || filmName.isBlank()) {
             return ResponseEntity.status(400).body(new ErrorResponse("Du måste skriva namn"));
@@ -109,6 +109,7 @@ public class FilmService implements IFilmService{
 
     @Override
     public ResponseEntity<Response> getFilmByCountry (String country, String title) {
+
         List<FilmModel> savedFilms = filmRepository.findAll();
 
         List<FilmModel> filmsByCountry = new ArrayList<>();
@@ -135,6 +136,22 @@ public class FilmService implements IFilmService{
         }
 
         return ResponseEntity.status(400).body(new ErrorResponse("Finns inte film: " + title));
+    }
+
+    //TODO - Error handle 500 internal error cannot divide by 0 zero
+    @Override
+    public ResponseEntity<Integer> getAverageRuntime () {
+        List<FilmModel> films = filmRepository.findAll();
+
+        int runtimeInMin = 0;
+
+        for (FilmModel film : films) {
+
+            runtimeInMin += film.getRuntime();
+
+        }
+
+        return ResponseEntity.ok(runtimeInMin / filmRepository.findAll().size());
     }
 
 }

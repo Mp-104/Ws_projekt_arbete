@@ -18,7 +18,9 @@ public interface IFilmService {
     ResponseEntity<String> deleteById (Integer id) throws Exception;
     ResponseEntity<Response> changeCountryOfOrigin (@PathVariable("id") int id, @RequestBody String country);
 
-    ResponseEntity<Response> searchFilmByName(String filmName);
+    ResponseEntity<Response> searchFilmByName (String filmName);
 
-    ResponseEntity<Response> getFilmByCountry(String country, String title);
+    ResponseEntity<Response> getFilmByCountry (String country, String title);
+
+    ResponseEntity<Integer> getAverageRuntime ();
 }

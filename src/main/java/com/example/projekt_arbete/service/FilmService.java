@@ -9,7 +9,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.client.HttpClientErrorException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -84,6 +83,27 @@ public class FilmService implements IFilmService{
             return ResponseEntity.status(404).body(new ErrorResponse("film finns inte"));
         }
 
+    }
+
+    @Override
+    public ResponseEntity<Response> searchFilmByName(String filmName) {
+
+        if (filmName == null || filmName.isBlank()) {
+            return ResponseEntity.status(609).body(new ErrorResponse("Du måste skriva namn"));
+        }
+
+        List<FilmModel> allFilms = filmRepository.findAll();
+
+        for (FilmModel film : allFilms) {
+            System.out.println(film.getOriginal_title());
+
+            if (film.getOriginal_title().equals(filmName)) {
+
+                return ResponseEntity.ok(film);
+            }
+        }
+
+        return ResponseEntity.status(609).body(new ErrorResponse("Ingen film funnen med namn: " + filmName));
     }
 
 }

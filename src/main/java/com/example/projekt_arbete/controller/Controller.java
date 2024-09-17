@@ -29,7 +29,7 @@ public class Controller {
 
     private final WebClient webClientConfig;
 
-    public Controller (WebClient.Builder webClient, IFilmService filmService, FilmRepository repository) {
+    public Controller(WebClient.Builder webClient, IFilmService filmService, FilmRepository repository) {
         this.webClientConfig = webClient
                 .baseUrl("https://api.themoviedb.org/3/")
                 .build();
@@ -39,7 +39,7 @@ public class Controller {
 
     // TODO - Error handle this shit: internal server error 500 if no film is found
     @GetMapping("/{id}")
-    public ResponseEntity<Response> getFilmById (@RequestParam(defaultValue = "movie") String movie, @PathVariable int id) {
+    public ResponseEntity<Response> getFilmById(@RequestParam(defaultValue = "movie") String movie, @PathVariable int id) {
 
         try {
 
@@ -63,7 +63,7 @@ public class Controller {
 
     //TODO - Make sure that films with same name or id cannot be saved, otherwise you can add many of the same films - DONE!
     @PostMapping("/{id}")
-    public ResponseEntity<Response> saveFilmById (@RequestParam(defaultValue = "movie") String movie, @PathVariable int id) {
+    public ResponseEntity<Response> saveFilmById(@RequestParam(defaultValue = "movie") String movie, @PathVariable int id) {
 
         try {
 
@@ -107,14 +107,14 @@ public class Controller {
     }
 
     @GetMapping("/savedfilms")
-    public ResponseEntity<List<FilmModel>> getSavedFilms () {
+    public ResponseEntity<List<FilmModel>> getSavedFilms() {
 
         return ResponseEntity.ok(filmService.findAll());
     }
 
     //TODO - needs more work/error handling Optional?
-    @PutMapping ("/savedfilms/{id}")
-    public ResponseEntity<Response> changeCountryOfOrigin (@PathVariable("id") int id, @RequestBody String country) {
+    @PutMapping("/savedfilms/{id}")
+    public ResponseEntity<Response> changeCountryOfOrigin(@PathVariable("id") int id, @RequestBody String country) {
 
         return filmService.changeCountryOfOrigin(id, country);
 
@@ -127,7 +127,7 @@ public class Controller {
     }
 
     @PutMapping("/savedfilms/opinion/{id}")
-    public ResponseEntity<String> addOpinion (@PathVariable("id") Integer id, @RequestBody String opinion) {
+    public ResponseEntity<String> addOpinion(@PathVariable("id") Integer id, @RequestBody String opinion) {
 
         if (filmService.findById(id).isPresent()) {
             filmService.findById(id).get().setOpinion(opinion);
@@ -140,7 +140,7 @@ public class Controller {
     }
 
     @DeleteMapping("/savedfilms/{id}")
-    public ResponseEntity<String> deleteFilmById (@PathVariable("id") Integer id) throws Exception {
+    public ResponseEntity<String> deleteFilmById(@PathVariable("id") Integer id) throws Exception {
         return filmService.deleteById(id);
 
 //        try {
@@ -154,45 +154,32 @@ public class Controller {
     }
 
     @GetMapping("/savedfilms/runtime")
-    public ResponseEntity<Integer> getTotalRuntime () {
+    public ResponseEntity<Integer> getTotalRuntime() {
 
         List<FilmModel> films = filmService.findAll();
 
         int runtimeInMin = 0;
 
-        for(FilmModel film : films) {
+        for (FilmModel film : films) {
 
             runtimeInMin += film.getRuntime();
 
         }
 
-        return ResponseEntity.ok(runtimeInMin/filmService.findAll().size());
+        return ResponseEntity.ok(runtimeInMin / filmService.findAll().size());
     }
 
-    // TODO -- Replace Object with a response - interface?
+    // example url: "https://localhost:8443/films/search?filmName=Reservoir%20Dogs"
     @GetMapping("/search")
     public ResponseEntity<Response> searchByTitle (@RequestParam String filmName) {
 
-        List<FilmModel> allFilms = filmService.findAll();
-
-        for (FilmModel film : allFilms) {
-
-            if (film.getOriginal_title().equals(filmName)) {
-
-                return ResponseEntity.ok(film);
-            } else {
-                return ResponseEntity.status(404).body(new ErrorResponse("no film with name: " + filmName));
-            }
-        }
-
-
-        return ResponseEntity.status(204).body(new ErrorResponse("Please enter search title"));
+       return filmService.searchFilmByName(filmName);
     }
 
     //TODO - Error handle and move code to relevant FilmService method
     //Example url: https://localhost:8443/films/country/US?title=Fight%20Club
     @GetMapping("/country/{country}")
-    public ResponseEntity<Response> getFilmsByCountry (@PathVariable("country") String country, @RequestParam(value = "title", required = false) String title) {
+    public ResponseEntity<Response> getFilmsByCountry(@PathVariable("country") String country, @RequestParam(value = "title", required = false) String title) {
 
         List<FilmModel> savedFilms = filmService.findAll();
 
@@ -202,7 +189,7 @@ public class Controller {
 
             for (FilmModel film : savedFilms) {
 
-                if (film.getOrigin_country().get(0).equals(country)) {
+                if (film.getOrigin_country().get(0).equals(country.toUpperCase())) {
 
                     filmsByCountry.add(film);
                 }
@@ -213,14 +200,14 @@ public class Controller {
 
         for (FilmModel film : savedFilms) {
 
-            if (film.getOrigin_country().get(0).equals(country) && film.getOriginal_title().equals(title)) {
+            if (film.getOrigin_country().get(0).equals(country.toUpperCase()) && film.getOriginal_title().equals(title)) {
 
                 return ResponseEntity.ok(film);
             }
         }
-        return null;
-    }
 
+        return ResponseEntity.status(1337).body(new ErrorResponse("jag vet inte"));
+    }
 
 
 }

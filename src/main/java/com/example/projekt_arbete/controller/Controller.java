@@ -7,6 +7,7 @@ import com.example.projekt_arbete.response.ErrorResponse;
 import com.example.projekt_arbete.response.ListResponse;
 import com.example.projekt_arbete.response.Response;
 import com.example.projekt_arbete.service.IFilmService;
+import io.github.resilience4j.ratelimiter.RateLimiter;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -29,12 +30,15 @@ public class Controller {
 
     private final WebClient webClientConfig;
 
-    public Controller (WebClient.Builder webClient, IFilmService filmService, FilmRepository repository) {
+    private final RateLimiter rateLimiter;
+
+    public Controller (WebClient.Builder webClient, IFilmService filmService, RateLimiter rateLimiter) {
         this.webClientConfig = webClient
                 .baseUrl("https://api.themoviedb.org/3/")
                 .build();
         //this.filmRepository = repository;
         this.filmService = filmService;
+        this.rateLimiter = rateLimiter;
     }
 
     // TODO - Error handle this shit: internal server error 500 if no film is found
@@ -42,18 +46,22 @@ public class Controller {
     public ResponseEntity<Response> getFilmById (@RequestParam(defaultValue = "movie") String movie, @PathVariable int id) {
 
         try {
+            if (rateLimiter.acquirePermission()) {
 
-            Optional<FilmModel> response = Optional.ofNullable(webClientConfig.get()
-                    .uri(film -> film
-                            .path(movie + "/" + id)
-                            .queryParam("api_key", Keys.ApiKey)
-                            .build())
-                    .retrieve()
-                    .bodyToMono(FilmModel.class)
-                    .block());
+                Optional<FilmModel> response = Optional.ofNullable(webClientConfig.get()
+                        .uri(film -> film
+                                .path(movie + "/" + id)
+                                .queryParam("api_key", Keys.ApiKey)
+                                .build())
+                        .retrieve()
+                        .bodyToMono(FilmModel.class)
+                        .block());
 
-            assert response.isPresent();
-            return ResponseEntity.ok(response.get());
+                assert response.isPresent();
+                return ResponseEntity.ok(response.get());
+            } else {
+                return ResponseEntity.status(429).body(new ErrorResponse("för mycket förfråga"));
+            }
 
         } catch (WebClientResponseException e) {
             return ResponseEntity.status(404).body(new ErrorResponse("Ingen sån film"));

@@ -19,4 +19,6 @@ public interface IFilmService {
     ResponseEntity<Response> changeCountryOfOrigin (@PathVariable("id") int id, @RequestBody String country);
 
     ResponseEntity<Response> searchFilmByName(String filmName);
+
+    ResponseEntity<Response> getFilmByCountry(String country, String title);
 }

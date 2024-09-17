@@ -3,6 +3,7 @@ package com.example.projekt_arbete.service;
 import com.example.projekt_arbete.model.FilmModel;
 import com.example.projekt_arbete.repository.FilmRepository;
 import com.example.projekt_arbete.response.ErrorResponse;
+import com.example.projekt_arbete.response.ListResponse;
 import com.example.projekt_arbete.response.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -89,7 +90,7 @@ public class FilmService implements IFilmService{
     public ResponseEntity<Response> searchFilmByName(String filmName) {
 
         if (filmName == null || filmName.isBlank()) {
-            return ResponseEntity.status(609).body(new ErrorResponse("Du måste skriva namn"));
+            return ResponseEntity.status(400).body(new ErrorResponse("Du måste skriva namn"));
         }
 
         List<FilmModel> allFilms = filmRepository.findAll();
@@ -103,7 +104,37 @@ public class FilmService implements IFilmService{
             }
         }
 
-        return ResponseEntity.status(609).body(new ErrorResponse("Ingen film funnen med namn: " + filmName));
+        return ResponseEntity.status(404).body(new ErrorResponse("Ingen film funnen med namn: " + filmName));
+    }
+
+    @Override
+    public ResponseEntity<Response> getFilmByCountry (String country, String title) {
+        List<FilmModel> savedFilms = filmRepository.findAll();
+
+        List<FilmModel> filmsByCountry = new ArrayList<>();
+
+        if (title == null || title.isBlank()) {
+
+            for (FilmModel film : savedFilms) {
+
+                if (film.getOrigin_country().get(0).equals(country.toUpperCase())) {
+
+                    filmsByCountry.add(film);
+                }
+            }
+
+            return ResponseEntity.ok(new ListResponse(filmsByCountry));
+        }
+
+        for (FilmModel film : savedFilms) {
+
+            if (film.getOrigin_country().get(0).equals(country.toUpperCase()) && film.getOriginal_title().equals(title)) {
+
+                return ResponseEntity.ok(film);
+            }
+        }
+
+        return ResponseEntity.status(400).body(new ErrorResponse("Finns inte film: " + title));
     }
 
 }

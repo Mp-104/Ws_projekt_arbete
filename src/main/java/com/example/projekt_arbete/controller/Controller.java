@@ -181,32 +181,7 @@ public class Controller {
     @GetMapping("/country/{country}")
     public ResponseEntity<Response> getFilmsByCountry(@PathVariable("country") String country, @RequestParam(value = "title", required = false) String title) {
 
-        List<FilmModel> savedFilms = filmService.findAll();
-
-        List<FilmModel> filmsByCountry = new ArrayList<>();
-
-        if (title == null || title.isBlank()) {
-
-            for (FilmModel film : savedFilms) {
-
-                if (film.getOrigin_country().get(0).equals(country.toUpperCase())) {
-
-                    filmsByCountry.add(film);
-                }
-            }
-
-            return ResponseEntity.ok(new ListResponse(filmsByCountry));
-        }
-
-        for (FilmModel film : savedFilms) {
-
-            if (film.getOrigin_country().get(0).equals(country.toUpperCase()) && film.getOriginal_title().equals(title)) {
-
-                return ResponseEntity.ok(film);
-            }
-        }
-
-        return ResponseEntity.status(1337).body(new ErrorResponse("jag vet inte"));
+        return filmService.getFilmByCountry(country, title);
     }
 
 

@@ -129,13 +129,7 @@ public class Controller {
     @PutMapping("/savedfilms/opinion/{id}")
     public ResponseEntity<String> addOpinion (@PathVariable("id") Integer id, @RequestBody String opinion) {
 
-        if (filmService.findById(id).isPresent()) {
-            filmService.findById(id).get().setOpinion(opinion);
-            filmService.save(filmService.findById(id).get());
-            return ResponseEntity.status(201).body("Opinion added!");
-        } else {
-            return ResponseEntity.status(404).body("could not find film");
-        }
+        return filmService.addOpinion(id, opinion);
 
     }
 
@@ -153,9 +147,9 @@ public class Controller {
 
     }
 
-    //TODO - Error handle 500 internal error cannot divide by 0 zero
+    //TODO - Error handle 500 internal error cannot divide by 0 zero DONE!
     @GetMapping("/savedfilms/runtime")
-    public ResponseEntity<Integer> getAverageRuntime () {
+    public ResponseEntity<Response> getAverageRuntime () {
 
         return filmService.getAverageRuntime();
     }
@@ -170,7 +164,8 @@ public class Controller {
     //TODO - Error handle and move code to relevant FilmService method
     //Example url: https://localhost:8443/films/country/US?title=Fight%20Club
     @GetMapping("/country/{country}")
-    public ResponseEntity<Response> getFilmsByCountry (@PathVariable("country") String country, @RequestParam(value = "title", required = false) String title) {
+    public ResponseEntity<Response> getFilmsByCountry (@PathVariable("country") String country,
+                                                       @RequestParam(value = "title", required = false) String title) {
 
         return filmService.getFilmByCountry(country, title);
     }

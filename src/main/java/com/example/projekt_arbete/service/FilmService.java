@@ -3,6 +3,7 @@ package com.example.projekt_arbete.service;
 import com.example.projekt_arbete.model.FilmModel;
 import com.example.projekt_arbete.repository.FilmRepository;
 import com.example.projekt_arbete.response.ErrorResponse;
+import com.example.projekt_arbete.response.IntegerResponse;
 import com.example.projekt_arbete.response.ListResponse;
 import com.example.projekt_arbete.response.Response;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -138,10 +139,13 @@ public class FilmService implements IFilmService{
         return ResponseEntity.status(400).body(new ErrorResponse("Finns inte film: " + title));
     }
 
-    //TODO - Error handle 500 internal error cannot divide by 0 zero
+    //TODO - Error handle 500 internal error cannot divide by 0 zero DONE!
     @Override
-    public ResponseEntity<Integer> getAverageRuntime () {
+    public ResponseEntity<Response> getAverageRuntime () {
         List<FilmModel> films = filmRepository.findAll();
+        if (films.isEmpty()) {
+            return ResponseEntity.status(500).body(new ErrorResponse("inga filmer sparade än"));
+        }
 
         int runtimeInMin = 0;
 
@@ -151,7 +155,22 @@ public class FilmService implements IFilmService{
 
         }
 
-        return ResponseEntity.ok(runtimeInMin / filmRepository.findAll().size());
+        return ResponseEntity.ok(new IntegerResponse(runtimeInMin / filmRepository.findAll().size()));
+    }
+
+    @Override
+    public ResponseEntity<String> addOpinion (Integer id, String opinion) {
+
+        if (filmRepository.findById(id).isPresent()) {
+
+            filmRepository.findById(id).get().setOpinion(opinion);
+            filmRepository.save(filmRepository.findById(id).get());
+            return ResponseEntity.status(201).body("Opinion adderad!");
+
+        } else {
+
+            return ResponseEntity.status(404).body("kan int finne film");
+        }
     }
 
 }

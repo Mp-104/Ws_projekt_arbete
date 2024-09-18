@@ -8,6 +8,7 @@ import com.example.projekt_arbete.response.ListResponse;
 import com.example.projekt_arbete.response.Response;
 import com.example.projekt_arbete.service.IFilmService;
 import io.github.resilience4j.ratelimiter.RateLimiter;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -23,6 +24,9 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/films")
 public class Controller {
+
+    @Value("${ApiKey}")
+    private String ApiKey;
 
     //private final FilmRepository filmRepository;
 
@@ -41,7 +45,7 @@ public class Controller {
         this.rateLimiter = rateLimiter;
     }
 
-    // TODO - Error handle this shit: internal server error 500 if no film is found
+    // TODO - Error handle this shit: internal server error 500 if no film is found - DONE?
     @GetMapping("/{id}")
     public ResponseEntity<Response> getFilmById (@RequestParam(defaultValue = "movie") String movie, @PathVariable int id) {
 
@@ -51,7 +55,7 @@ public class Controller {
                 Optional<FilmModel> response = Optional.ofNullable(webClientConfig.get()
                         .uri(film -> film
                                 .path(movie + "/" + id)
-                                .queryParam("api_key", Keys.ApiKey)
+                                .queryParam("api_key", ApiKey)
                                 .build())
                         .retrieve()
                         .bodyToMono(FilmModel.class)
@@ -75,38 +79,41 @@ public class Controller {
 
         try {
 
-            //Optional
-            Optional<FilmModel> response = Optional.ofNullable(webClientConfig.get()
-                    .uri(film -> film
-                            .path(movie + "/" + id)
-                            .queryParam("api_key", Keys.ApiKey)
-                            .build())
-                    .retrieve()
-                    .bodyToMono(FilmModel.class)
-                    .block());
+            if (rateLimiter.acquirePermission()) {
+                Optional<FilmModel> response = Optional.ofNullable(webClientConfig.get()
+                        .uri(film -> film
+                                .path(movie + "/" + id)
+                                .queryParam("api_key", ApiKey)
+                                .build())
+                        .retrieve()
+                        .bodyToMono(FilmModel.class)
+                        .block());
 
 
-            //if (response.isEmpty()) {
-            //    return ResponseEntity.status(404).body(new ErrorResponse("film inte hittad"));
-            //}
-            // Suggested by IntelliJ, ingen aning hur det fungerar
-            assert response.isPresent();
+                //if (response.isEmpty()) {
+                //    return ResponseEntity.status(404).body(new ErrorResponse("film inte hittad"));
+                //}
+                // Suggested by IntelliJ, ingen aning hur det fungerar
+                assert response.isPresent();
 
-            List<FilmModel> allFilms = filmService.findAll();
+                List<FilmModel> allFilms = filmService.findAll();
 
-            for (FilmModel film : allFilms) {
-                System.out.println("for each film.getId(): " + film.getId());
+                for (FilmModel film : allFilms) {
+                    System.out.println("for each film.getId(): " + film.getId());
 
-                if (film.getId() == response.get().getId()) {
+                    if (film.getId() == response.get().getId()) {
 
-                    return ResponseEntity.ok(new ErrorResponse("Filmen redan sparad :) "));
+                        return ResponseEntity.ok(new ErrorResponse("Filmen redan sparad :) "));
+                    }
+
                 }
 
+                filmService.save(response.get());
+
+                return ResponseEntity.status(201).body(response.get());
+            } else {
+                return ResponseEntity.status(429).body(new ErrorResponse("för mycket förfråga"));
             }
-
-            filmService.save(response.get());
-
-            return ResponseEntity.status(201).body(response.get());
 
         } catch (WebClientResponseException e) {
             return ResponseEntity.status(404).body(new ErrorResponse("film inte funnen"));

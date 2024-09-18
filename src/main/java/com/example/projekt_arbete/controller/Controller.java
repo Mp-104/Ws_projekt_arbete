@@ -173,7 +173,7 @@ public class Controller {
        return filmService.searchFilmByName(filmName);
     }
 
-    //TODO - Error handle and move code to relevant FilmService method
+    //TODO - Error handle and move code to relevant FilmService method - DONE
     //Example url: https://localhost:8443/films/country/US?title=Fight%20Club
     @GetMapping("/country/{country}")
     public ResponseEntity<Response> getFilmsByCountry (@PathVariable("country") String country,
@@ -182,11 +182,17 @@ public class Controller {
         return filmService.getFilmByCountry(country, title);
     }
 
+    // TODO - clean this mess up
     @GetMapping("/info")
     public ResponseEntity<Response> getInfo () {
 
+        int USfilms = 0;
+        int nonUSfilms = 0;
+
         ArrayList<FilmModel> adultFilms = new ArrayList<>();
         ArrayList<String> budgetFilms = new ArrayList<>();
+
+
 
         List<FilmModel> films = filmService.findAll();
         Collections.sort(films, new Comparator<FilmModel>() {
@@ -197,16 +203,21 @@ public class Controller {
         });
 
         for (FilmModel film : films) {
-            System.out.println(film.getOriginal_title() + ": " + film.getBudget());
+
+            if (film.isAdult() == true) {
+                adultFilms.add(film);
+            }
+
+            if (Objects.equals(film.getOrigin_country().get(0), "US")) {
+                USfilms++;
+            } else {
+                nonUSfilms++;
+            }
+
+            System.out.println(film.getOriginal_title() + ": " + film.getBudget() + " origin country " + film.getOrigin_country().get(0));
             budgetFilms.add(film.getOriginal_title() + " " + film.getBudget());
         }
 
-        for (FilmModel film : filmService.findAll()) {
-            if (film.isAdult() == true) {
-                adultFilms.add(film);
-
-            }
-        }
 
         if (filmService.findAll().isEmpty()) {
             return ResponseEntity.ok(new ErrorResponse("Du har inga sparade filmer"));
@@ -218,7 +229,7 @@ public class Controller {
 
         return ResponseEntity.ok(new ErrorResponse("du har: " + filmService.findAll().size() + " filmer sparade." +
                 " medellängden på filmerna är: " + y + " minuter, " +
-                "varav " + adultFilms.size() + " porrfilm(er)" + "budge rank " + budgetFilms));
+                "varav " + adultFilms.size() + " porrfilm(er)" + "budge rank " + budgetFilms + " av dessa är " + USfilms + " amerkikanska och resten " + nonUSfilms + " från andra länder"));
 
     }
 

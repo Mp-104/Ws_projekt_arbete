@@ -14,7 +14,7 @@ import java.util.Optional;
 public interface IFilmService {
     FilmModel save (FilmModel film);
     List<FilmModel> findAll ();
-    Optional<FilmModel> findById (Integer id);
+    ResponseEntity<Response> findById (Integer id);
     ResponseEntity<String> deleteById (Integer id) throws Exception;
     ResponseEntity<Response> changeCountryOfOrigin (@PathVariable("id") int id, @RequestBody String country);
     ResponseEntity<Response> searchFilmByName (String filmName);

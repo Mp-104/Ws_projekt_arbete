@@ -35,26 +35,39 @@ public class FilmService implements IFilmService{
     }
 
     @Override
-    public Optional<FilmModel> findById (Integer id) {
-        return filmRepository.findById(id);
+    public ResponseEntity<Response> findById (Integer id) {
+
+        Optional<FilmModel> optionalFilm = filmRepository.findById(id);
+
+        if (optionalFilm.isPresent()) {
+
+            return ResponseEntity.ok((optionalFilm.get()));
+        } else {
+
+            return ResponseEntity.status(404).body(new ErrorResponse("film finns inte"));
+        }
+
     }
 
     @Override
     public ResponseEntity<String> deleteById (Integer id) throws Exception {
 
-        assert filmRepository.findById(id).isPresent();
+        Optional<FilmModel> optionalFilm = filmRepository.findById(id);
+
         try {
+
             if (filmRepository.findById(id).isPresent()) {
+
                 filmRepository.deleteById(id);
-                return ResponseEntity.ok("Film with id "+ id + " Deleted");
+                return ResponseEntity.ok("Film med id "+ id + " tagen borta");
+
             } else {
-                //throw new Exception("No film found with id: " + id);
+
                 return ResponseEntity.status(404).body("no film found with id: " + id);
             }
         } catch (Exception e) {
             throw new Exception();
         }
-        //filmRepository.findById(id).get();
     }
 
     @Override
@@ -97,7 +110,7 @@ public class FilmService implements IFilmService{
         List<FilmModel> allFilms = filmRepository.findAll();
 
         for (FilmModel film : allFilms) {
-            System.out.println(film.getOriginal_title());
+            //System.out.println(film.getOriginal_title());
 
             if (film.getOriginal_title().equals(filmName)) {
 
@@ -144,7 +157,7 @@ public class FilmService implements IFilmService{
     public ResponseEntity<Response> getAverageRuntime () {
         List<FilmModel> films = filmRepository.findAll();
         if (films.isEmpty()) {
-            return ResponseEntity.status(500).body(new ErrorResponse("inga filmer sparade än"));
+            return ResponseEntity.status(404).body(new ErrorResponse("inga filmer sparade än"));
         }
 
         int runtimeInMin = 0;
@@ -161,9 +174,11 @@ public class FilmService implements IFilmService{
     @Override
     public ResponseEntity<String> addOpinion (Integer id, String opinion) {
 
-        if (filmRepository.findById(id).isPresent()) {
+        Optional<FilmModel> optionalFilm = filmRepository.findById(id);
 
-            filmRepository.findById(id).get().setOpinion(opinion);
+        if (optionalFilm.isPresent()) {
+
+            optionalFilm.get().setOpinion(opinion);
             filmRepository.save(filmRepository.findById(id).get());
             return ResponseEntity.status(201).body("Opinion adderad!");
 

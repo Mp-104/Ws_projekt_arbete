@@ -1,10 +1,8 @@
 package com.example.projekt_arbete.controller;
 
-import com.example.projekt_arbete.Keys;
 import com.example.projekt_arbete.model.FilmModel;
-import com.example.projekt_arbete.repository.FilmRepository;
 import com.example.projekt_arbete.response.ErrorResponse;
-import com.example.projekt_arbete.response.ListResponse;
+import com.example.projekt_arbete.response.IntegerResponse;
 import com.example.projekt_arbete.response.Response;
 import com.example.projekt_arbete.service.IFilmService;
 import io.github.resilience4j.ratelimiter.RateLimiter;
@@ -14,10 +12,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 // TODO - More error handling, but probably in FilmService class
 
@@ -183,6 +180,46 @@ public class Controller {
                                                        @RequestParam(value = "title", required = false) String title) {
 
         return filmService.getFilmByCountry(country, title);
+    }
+
+    @GetMapping("/info")
+    public ResponseEntity<Response> getInfo () {
+
+        ArrayList<FilmModel> adultFilms = new ArrayList<>();
+        ArrayList<String> budgetFilms = new ArrayList<>();
+
+        List<FilmModel> films = filmService.findAll();
+        Collections.sort(films, new Comparator<FilmModel>() {
+            @Override
+            public int compare(FilmModel o1, FilmModel o2) {
+                return Integer.compare(o1.getBudget(), o2.getBudget());
+            }
+        });
+
+        for (FilmModel film : films) {
+            System.out.println(film.getOriginal_title() + ": " + film.getBudget());
+            budgetFilms.add(film.getOriginal_title() + " " + film.getBudget());
+        }
+
+        for (FilmModel film : filmService.findAll()) {
+            if (film.isAdult() == true) {
+                adultFilms.add(film);
+
+            }
+        }
+
+        if (filmService.findAll().isEmpty()) {
+            return ResponseEntity.ok(new ErrorResponse("Du har inga sparade filmer"));
+        }
+
+
+        IntegerResponse intRes = (IntegerResponse) filmService.getAverageRuntime().getBody();
+        int y = intRes.getAverageRuntime();
+
+        return ResponseEntity.ok(new ErrorResponse("du har: " + filmService.findAll().size() + " filmer sparade." +
+                " medellängden på filmerna är: " + y + " minuter, " +
+                "varav " + adultFilms.size() + " porrfilm(er)" + "budge rank " + budgetFilms));
+
     }
 
 

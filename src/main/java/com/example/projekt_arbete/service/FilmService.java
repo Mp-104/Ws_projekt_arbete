@@ -8,12 +8,14 @@ import com.example.projekt_arbete.response.IntegerResponse;
 import com.example.projekt_arbete.response.ListResponse;
 import com.example.projekt_arbete.response.Response;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 // Do more error handling
 @Service
@@ -310,7 +312,7 @@ public class FilmService implements IFilmService{
             IntegerResponse intRes = (IntegerResponse) getAverageRuntime().getBody();
             int y = intRes.getAverageRuntime();
 
-            return ResponseEntity.ok(new ErrorResponse("du har: " + findAll().size() + " filmer sparade." + "/n/r" +
+            return ResponseEntity.ok(new ErrorResponse("du har: " + findAll().size() + " filmer sparade." + "\n\r" +
                     " medellängden på filmerna är: " + y + " minuter, " +
                     "varav " + adultFilms.size() + " porrfilm(er)" + "budge rank " + budgetFilms + " av dessa är " + USfilms + " amerkikanska och resten " + nonUSfilms + " från andra länder"));
 
@@ -319,5 +321,51 @@ public class FilmService implements IFilmService{
             return ResponseEntity.status(500).body(new ErrorResponse("något fel"));
         }
     }
+
+
+
+
+
+//    @Override
+//    public ResponseEntity<Response> getInfo() {
+//        try {
+//            List<FilmModel> films = findAll();
+//
+//            if (films.isEmpty()) {
+//                return ResponseEntity.ok(new ErrorResponse("Du har inga sparade filmer"));
+//            }
+//
+//            // Count and categorize films
+//            long usFilmCount = films.stream()
+//                    .filter(film -> "US".equals(film.getOrigin_country().get(0)))
+//                    .count();
+//
+//            long nonUsFilmCount = films.size() - usFilmCount;
+//
+//            List<FilmModel> adultFilms = films.stream()
+//                    .filter(FilmModel::isAdult)
+//                    .toList();
+//
+//            List<String> budgetFilms = films.stream()
+//                    .sorted(Comparator.comparingInt(FilmModel::getBudget))
+//                    .map(film -> film.getOriginal_title() + " " + film.getBudget())
+//                    .toList();
+//
+//            IntegerResponse intRes = (IntegerResponse) getAverageRuntime().getBody();
+//            int averageRuntime = intRes != null ? intRes.getAverageRuntime() : 0;
+//
+//            String responseMessage = String.format("Du har: %d filmer sparade.\n" +
+//                            "Medellängden på filmerna är: %d minuter, " +
+//                            "varav %d porrfilm(er). " +
+//                            "Budget rank: %s. " +
+//                            "Av dessa är %d amerikanska och resten %d från andra länder.",
+//                    films.size(), averageRuntime, adultFilms.size(), budgetFilms, usFilmCount, nonUsFilmCount);
+//
+//            return ResponseEntity.ok(new ErrorResponse(responseMessage));
+//
+//        } catch (Exception e) {
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("Något fel inträffade"));
+//        }
+//    }
 
 }

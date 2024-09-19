@@ -1,5 +1,6 @@
 package com.example.projekt_arbete.service;
 
+import com.example.projekt_arbete.model.FilmDTO;
 import com.example.projekt_arbete.model.FilmModel;
 import com.example.projekt_arbete.repository.FilmRepository;
 import com.example.projekt_arbete.response.ErrorResponse;
@@ -12,10 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Optional;
+import java.util.*;
 
 // Do more error handling
 @Service
@@ -173,6 +171,9 @@ public class FilmService implements IFilmService{
 
     @Override
     public ResponseEntity<String> addOpinion (Integer id, String opinion) {
+        if (opinion == null || opinion.isEmpty() || opinion.isBlank()) {
+            return ResponseEntity.status(400).body("måste ha body");
+        }
 
         Optional<FilmModel> optionalFilm = filmRepository.findById(id);
 
@@ -186,6 +187,98 @@ public class FilmService implements IFilmService{
 
             return ResponseEntity.status(404).body("kan int finne film");
         }
+    }
+
+    @Override
+    public ResponseEntity<Response> getFilmWithAdditoinalInfo(int filmId, boolean opinion, boolean description) {
+
+        FilmModel film;
+        FilmDTO filmDTO = new FilmDTO();
+        if (filmRepository.findById(filmId).isPresent()) {
+            film = filmRepository.findById(filmId).get();
+        } else {
+            return ResponseEntity.status(404).body(new ErrorResponse("Film finns inte"));
+        }
+
+        if (opinion == true && description == true ) {
+            filmDTO.setDescription(film.getOverview());
+            filmDTO.setOpinion(film.getOpinion());
+            filmDTO.setTitle(film.getOriginal_title());
+
+            return ResponseEntity.ok(filmDTO);
+        }
+
+        if (opinion == true) {
+            filmDTO.setTitle(film.getOriginal_title());
+            filmDTO.setOpinion(film.getOpinion());
+            filmDTO.setDescription("inget här");
+
+            return ResponseEntity.ok(filmDTO);
+
+        }
+
+        if (description == true) {
+            filmDTO.setTitle(film.getOriginal_title());
+            filmDTO.setDescription(film.getOverview());
+            filmDTO.setOpinion("inget här");
+
+            return ResponseEntity.ok(filmDTO);
+        }
+        filmDTO.setTitle(film.getOriginal_title());
+        filmDTO.setDescription("inget här");
+        filmDTO.setOpinion("inget här");
+
+        return ResponseEntity.ok(filmDTO);
+
+    }
+
+    // TODO - clean this mess up
+    @Override
+    public ResponseEntity<Response> getInfo() {
+
+        int USfilms = 0;
+        int nonUSfilms = 0;
+
+        ArrayList<FilmModel> adultFilms = new ArrayList<>();
+        ArrayList<String> budgetFilms = new ArrayList<>();
+
+        List<FilmModel> films = findAll();
+        Collections.sort(films, new Comparator<FilmModel>() {
+            @Override
+            public int compare(FilmModel o1, FilmModel o2) {
+                return Integer.compare(o1.getBudget(), o2.getBudget());
+            }
+        });
+
+        for (FilmModel film : films) {
+
+            if (film.isAdult() == true) {
+                adultFilms.add(film);
+            }
+
+            if (Objects.equals(film.getOrigin_country().get(0), "US")) {
+                USfilms++;
+            } else {
+                nonUSfilms++;
+            }
+
+            System.out.println(film.getOriginal_title() + ": " + film.getBudget() + " origin country " + film.getOrigin_country().get(0));
+            budgetFilms.add(film.getOriginal_title() + " " + film.getBudget());
+        }
+
+
+        if (findAll().isEmpty()) {
+            return ResponseEntity.ok(new ErrorResponse("Du har inga sparade filmer"));
+        }
+
+
+        IntegerResponse intRes = (IntegerResponse) getAverageRuntime().getBody();
+        int y = intRes.getAverageRuntime();
+
+        return ResponseEntity.ok(new ErrorResponse("du har: " + findAll().size() + " filmer sparade." +
+                " medellängden på filmerna är: " + y + " minuter, " +
+                "varav " + adultFilms.size() + " porrfilm(er)" + "budge rank " + budgetFilms + " av dessa är " + USfilms + " amerkikanska och resten " + nonUSfilms + " från andra länder"));
+
     }
 
 }

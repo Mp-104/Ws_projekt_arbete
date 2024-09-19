@@ -21,4 +21,6 @@ public interface IFilmService {
     ResponseEntity<Response> getFilmByCountry (String country, String title);
     ResponseEntity<Response> getAverageRuntime ();
     ResponseEntity<String> addOpinion (Integer id, String opinion);
+    ResponseEntity<Response> getFilmWithAdditoinalInfo (int filmId, boolean opinion, boolean description);
+    ResponseEntity<Response> getInfo();
 }

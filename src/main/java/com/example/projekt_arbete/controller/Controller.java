@@ -1,9 +1,11 @@
 package com.example.projekt_arbete.controller;
 
+import com.example.projekt_arbete.model.FilmDTO;
 import com.example.projekt_arbete.model.FilmModel;
 import com.example.projekt_arbete.response.ErrorResponse;
 import com.example.projekt_arbete.response.IntegerResponse;
 import com.example.projekt_arbete.response.Response;
+import com.example.projekt_arbete.service.FilmService;
 import com.example.projekt_arbete.service.IFilmService;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import org.springframework.beans.factory.annotation.Value;
@@ -182,54 +184,63 @@ public class Controller {
         return filmService.getFilmByCountry(country, title);
     }
 
-    // TODO - clean this mess up
+
     @GetMapping("/info")
     public ResponseEntity<Response> getInfo () {
 
-        int USfilms = 0;
-        int nonUSfilms = 0;
+        return filmService.getInfo();
+//        int USfilms = 0;
+//        int nonUSfilms = 0;
+//
+//        ArrayList<FilmModel> adultFilms = new ArrayList<>();
+//        ArrayList<String> budgetFilms = new ArrayList<>();
+//
+//        List<FilmModel> films = filmService.findAll();
+//        Collections.sort(films, new Comparator<FilmModel>() {
+//            @Override
+//            public int compare(FilmModel o1, FilmModel o2) {
+//                return Integer.compare(o1.getBudget(), o2.getBudget());
+//            }
+//        });
+//
+//        for (FilmModel film : films) {
+//
+//            if (film.isAdult() == true) {
+//                adultFilms.add(film);
+//            }
+//
+//            if (Objects.equals(film.getOrigin_country().get(0), "US")) {
+//                USfilms++;
+//            } else {
+//                nonUSfilms++;
+//            }
+//
+//            System.out.println(film.getOriginal_title() + ": " + film.getBudget() + " origin country " + film.getOrigin_country().get(0));
+//            budgetFilms.add(film.getOriginal_title() + " " + film.getBudget());
+//        }
+//
+//
+//        if (filmService.findAll().isEmpty()) {
+//            return ResponseEntity.ok(new ErrorResponse("Du har inga sparade filmer"));
+//        }
+//
+//
+//        IntegerResponse intRes = (IntegerResponse) filmService.getAverageRuntime().getBody();
+//        int y = intRes.getAverageRuntime();
+//
+//        return ResponseEntity.ok(new ErrorResponse("du har: " + filmService.findAll().size() + " filmer sparade." +
+//                " medellängden på filmerna är: " + y + " minuter, " +
+//                "varav " + adultFilms.size() + " porrfilm(er)" + "budge rank " + budgetFilms + " av dessa är " + USfilms + " amerkikanska och resten " + nonUSfilms + " från andra länder"));
 
-        ArrayList<FilmModel> adultFilms = new ArrayList<>();
-        ArrayList<String> budgetFilms = new ArrayList<>();
+    }
 
+    @GetMapping("/getfilm/{filmId}")
+    //https://localhost:8443/films/getfilm/1?opinion=true&description=true example
+    public ResponseEntity<Response> getFilmWithAdditionalInfo (@PathVariable("filmId") int filmId,
+                                                             @RequestParam(value = "opinion", defaultValue = "false") boolean opinion,
+                                                             @RequestParam(value = "description", defaultValue = "false") boolean description) {
 
-
-        List<FilmModel> films = filmService.findAll();
-        Collections.sort(films, new Comparator<FilmModel>() {
-            @Override
-            public int compare(FilmModel o1, FilmModel o2) {
-                return Integer.compare(o1.getBudget(), o2.getBudget());
-            }
-        });
-
-        for (FilmModel film : films) {
-
-            if (film.isAdult() == true) {
-                adultFilms.add(film);
-            }
-
-            if (Objects.equals(film.getOrigin_country().get(0), "US")) {
-                USfilms++;
-            } else {
-                nonUSfilms++;
-            }
-
-            System.out.println(film.getOriginal_title() + ": " + film.getBudget() + " origin country " + film.getOrigin_country().get(0));
-            budgetFilms.add(film.getOriginal_title() + " " + film.getBudget());
-        }
-
-
-        if (filmService.findAll().isEmpty()) {
-            return ResponseEntity.ok(new ErrorResponse("Du har inga sparade filmer"));
-        }
-
-
-        IntegerResponse intRes = (IntegerResponse) filmService.getAverageRuntime().getBody();
-        int y = intRes.getAverageRuntime();
-
-        return ResponseEntity.ok(new ErrorResponse("du har: " + filmService.findAll().size() + " filmer sparade." +
-                " medellängden på filmerna är: " + y + " minuter, " +
-                "varav " + adultFilms.size() + " porrfilm(er)" + "budge rank " + budgetFilms + " av dessa är " + USfilms + " amerkikanska och resten " + nonUSfilms + " från andra länder"));
+        return filmService.getFilmWithAdditoinalInfo(filmId, opinion, description);
 
     }
 

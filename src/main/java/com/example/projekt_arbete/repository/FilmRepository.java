@@ -6,4 +6,5 @@ import reactor.core.publisher.Mono;
 
 @org.springframework.stereotype.Repository
 public interface FilmRepository extends JpaRepository<FilmModel, Integer> {
+
 }

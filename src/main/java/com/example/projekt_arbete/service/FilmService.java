@@ -232,7 +232,7 @@ public class FilmService implements IFilmService{
 
     }
 
-    // TODO - clean this mess up
+    // TODO - clean this mess up, a lot of cleaning left
     @Override
     public ResponseEntity<Response> getInfo() {
 
@@ -275,9 +275,10 @@ public class FilmService implements IFilmService{
         IntegerResponse intRes = (IntegerResponse) getAverageRuntime().getBody();
         int y = intRes.getAverageRuntime();
 
-        return ResponseEntity.ok(new ErrorResponse("du har: " + findAll().size() + " filmer sparade." +
+        return ResponseEntity.ok(new ErrorResponse("du har: " + findAll().size() + " filmer sparade." + "/n/r"+
                 " medellängden på filmerna är: " + y + " minuter, " +
                 "varav " + adultFilms.size() + " porrfilm(er)" + "budge rank " + budgetFilms + " av dessa är " + USfilms + " amerkikanska och resten " + nonUSfilms + " från andra länder"));
+
 
     }
 

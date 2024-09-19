@@ -35,14 +35,19 @@ public class FilmService implements IFilmService{
     @Override
     public ResponseEntity<Response> findById (Integer id) {
 
-        Optional<FilmModel> optionalFilm = filmRepository.findById(id);
+        try {
 
-        if (optionalFilm.isPresent()) {
+            Optional<FilmModel> optionalFilm = filmRepository.findById(id);
 
-            return ResponseEntity.ok((optionalFilm.get()));
-        } else {
+            if (optionalFilm.isPresent()) {
 
-            return ResponseEntity.status(404).body(new ErrorResponse("film finns inte"));
+                return ResponseEntity.ok((optionalFilm.get()));
+            } else {
+
+                return ResponseEntity.status(404).body(new ErrorResponse("film finns inte"));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(new ErrorResponse("något fel"));
         }
 
     }
@@ -69,7 +74,7 @@ public class FilmService implements IFilmService{
     }
 
     @Override
-    public ResponseEntity<Response> changeCountryOfOrigin (@PathVariable("id") int id, @RequestBody String country) {
+    public ResponseEntity<Response> changeCountryOfOrigin (int id, String country) {
 
         List<String> newCountryOfOrigins = new ArrayList<>() {};
 
@@ -101,22 +106,27 @@ public class FilmService implements IFilmService{
     @Override
     public ResponseEntity<Response> searchFilmByName (String filmName) {
 
-        if (filmName == null || filmName.isBlank()) {
-            return ResponseEntity.status(400).body(new ErrorResponse("Du måste skriva namn"));
-        }
+        try {
 
-        List<FilmModel> allFilms = filmRepository.findAll();
-
-        for (FilmModel film : allFilms) {
-            //System.out.println(film.getOriginal_title());
-
-            if (film.getOriginal_title().equals(filmName)) {
-
-                return ResponseEntity.ok(film);
+            if (filmName == null || filmName.isBlank()) {
+                return ResponseEntity.status(400).body(new ErrorResponse("Du måste skriva namn"));
             }
-        }
 
-        return ResponseEntity.status(404).body(new ErrorResponse("Ingen film funnen med namn: " + filmName));
+            List<FilmModel> allFilms = filmRepository.findAll();
+
+            for (FilmModel film : allFilms) {
+                //System.out.println(film.getOriginal_title());
+
+                if (film.getOriginal_title().equals(filmName)) {
+
+                    return ResponseEntity.ok(film);
+                }
+            }
+
+            return ResponseEntity.status(404).body(new ErrorResponse("Ingen film funnen med namn: " + filmName));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(new ErrorResponse("något fel"));
+        }
     }
 
     @Override
@@ -126,109 +136,131 @@ public class FilmService implements IFilmService{
 
         List<FilmModel> filmsByCountry = new ArrayList<>();
 
-        if (title == null || title.isBlank()) {
+        try {
+
+
+            if (title == null || title.isBlank()) {
+
+                for (FilmModel film : savedFilms) {
+
+                    if (film.getOrigin_country().get(0).equals(country.toUpperCase())) {
+
+                        filmsByCountry.add(film);
+                    }
+                }
+
+                return ResponseEntity.ok(new ListResponse(filmsByCountry));
+            }
 
             for (FilmModel film : savedFilms) {
 
-                if (film.getOrigin_country().get(0).equals(country.toUpperCase())) {
+                if (film.getOrigin_country().get(0).equals(country.toUpperCase()) && film.getOriginal_title().equals(title)) {
 
-                    filmsByCountry.add(film);
+                    return ResponseEntity.ok(film);
                 }
             }
 
-            return ResponseEntity.ok(new ListResponse(filmsByCountry));
+            return ResponseEntity.status(400).body(new ErrorResponse("Finns inte film: " + title));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(new ErrorResponse("något fel"));
         }
-
-        for (FilmModel film : savedFilms) {
-
-            if (film.getOrigin_country().get(0).equals(country.toUpperCase()) && film.getOriginal_title().equals(title)) {
-
-                return ResponseEntity.ok(film);
-            }
-        }
-
-        return ResponseEntity.status(400).body(new ErrorResponse("Finns inte film: " + title));
     }
 
     //TODO - Error handle 500 internal error cannot divide by 0 zero DONE!
     @Override
     public ResponseEntity<Response> getAverageRuntime () {
-        List<FilmModel> films = filmRepository.findAll();
-        if (films.isEmpty()) {
-            return ResponseEntity.status(404).body(new ErrorResponse("inga filmer sparade än"));
+
+        try {
+
+            List<FilmModel> films = filmRepository.findAll();
+            if (films.isEmpty()) {
+                return ResponseEntity.status(404).body(new ErrorResponse("inga filmer sparade än"));
+            }
+
+            int runtimeInMin = 0;
+
+            for (FilmModel film : films) {
+
+                runtimeInMin += film.getRuntime();
+
+            }
+
+            return ResponseEntity.ok(new IntegerResponse(runtimeInMin / filmRepository.findAll().size()));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(new ErrorResponse("något fel"));
         }
-
-        int runtimeInMin = 0;
-
-        for (FilmModel film : films) {
-
-            runtimeInMin += film.getRuntime();
-
-        }
-
-        return ResponseEntity.ok(new IntegerResponse(runtimeInMin / filmRepository.findAll().size()));
     }
 
     @Override
     public ResponseEntity<String> addOpinion (Integer id, String opinion) {
-        if (opinion == null || opinion.isEmpty() || opinion.isBlank()) {
-            return ResponseEntity.status(400).body("måste ha body");
-        }
 
-        Optional<FilmModel> optionalFilm = filmRepository.findById(id);
+        try {
+            if (opinion == null || opinion.isEmpty() || opinion.isBlank()) {
+                return ResponseEntity.status(400).body("måste ha body");
+            }
 
-        if (optionalFilm.isPresent()) {
+            Optional<FilmModel> optionalFilm = filmRepository.findById(id);
 
-            optionalFilm.get().setOpinion(opinion);
-            filmRepository.save(filmRepository.findById(id).get());
-            return ResponseEntity.status(201).body("Opinion adderad!");
+            if (optionalFilm.isPresent()) {
 
-        } else {
+                optionalFilm.get().setOpinion(opinion);
+                filmRepository.save(filmRepository.findById(id).get());
+                return ResponseEntity.status(201).body("Opinion adderad!");
 
-            return ResponseEntity.status(404).body("kan int finne film");
+            } else {
+
+                return ResponseEntity.status(404).body("kan int finne film");
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("något fel");
         }
     }
 
     @Override
-    public ResponseEntity<Response> getFilmWithAdditoinalInfo(int filmId, boolean opinion, boolean description) {
+    public ResponseEntity<Response> getFilmWithAdditionalInfo(int filmId, boolean opinion, boolean description) {
 
         FilmModel film;
         FilmDTO filmDTO = new FilmDTO();
-        if (filmRepository.findById(filmId).isPresent()) {
-            film = filmRepository.findById(filmId).get();
-        } else {
-            return ResponseEntity.status(404).body(new ErrorResponse("Film finns inte"));
-        }
+        try {
 
-        if (opinion == true && description == true ) {
-            filmDTO.setDescription(film.getOverview());
-            filmDTO.setOpinion(film.getOpinion());
+            if (filmRepository.findById(filmId).isPresent()) {
+                film = filmRepository.findById(filmId).get();
+            } else {
+                return ResponseEntity.status(404).body(new ErrorResponse("Film finns inte"));
+            }
+
+            if (opinion == true && description == true) {
+                filmDTO.setDescription(film.getOverview());
+                filmDTO.setOpinion(film.getOpinion());
+                filmDTO.setTitle(film.getOriginal_title());
+
+                return ResponseEntity.ok(filmDTO);
+            }
+
+            if (opinion == true) {
+                filmDTO.setTitle(film.getOriginal_title());
+                filmDTO.setOpinion(film.getOpinion());
+                filmDTO.setDescription("inget här");
+
+                return ResponseEntity.ok(filmDTO);
+
+            }
+
+            if (description == true) {
+                filmDTO.setTitle(film.getOriginal_title());
+                filmDTO.setDescription(film.getOverview());
+                filmDTO.setOpinion("inget här");
+
+                return ResponseEntity.ok(filmDTO);
+            }
             filmDTO.setTitle(film.getOriginal_title());
-
-            return ResponseEntity.ok(filmDTO);
-        }
-
-        if (opinion == true) {
-            filmDTO.setTitle(film.getOriginal_title());
-            filmDTO.setOpinion(film.getOpinion());
             filmDTO.setDescription("inget här");
-
-            return ResponseEntity.ok(filmDTO);
-
-        }
-
-        if (description == true) {
-            filmDTO.setTitle(film.getOriginal_title());
-            filmDTO.setDescription(film.getOverview());
             filmDTO.setOpinion("inget här");
 
             return ResponseEntity.ok(filmDTO);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(new ErrorResponse("något fel på databas"));
         }
-        filmDTO.setTitle(film.getOriginal_title());
-        filmDTO.setDescription("inget här");
-        filmDTO.setOpinion("inget här");
-
-        return ResponseEntity.ok(filmDTO);
 
     }
 
@@ -242,44 +274,50 @@ public class FilmService implements IFilmService{
         ArrayList<FilmModel> adultFilms = new ArrayList<>();
         ArrayList<String> budgetFilms = new ArrayList<>();
 
-        List<FilmModel> films = findAll();
-        Collections.sort(films, new Comparator<FilmModel>() {
-            @Override
-            public int compare(FilmModel o1, FilmModel o2) {
-                return Integer.compare(o1.getBudget(), o2.getBudget());
+        try {
+
+
+            List<FilmModel> films = findAll();
+            Collections.sort(films, new Comparator<FilmModel>() {
+                @Override
+                public int compare(FilmModel o1, FilmModel o2) {
+                    return Integer.compare(o1.getBudget(), o2.getBudget());
+                }
+            });
+
+            for (FilmModel film : films) {
+
+                if (film.isAdult() == true) {
+                    adultFilms.add(film);
+                }
+
+                if (Objects.equals(film.getOrigin_country().get(0), "US")) {
+                    USfilms++;
+                } else {
+                    nonUSfilms++;
+                }
+
+                System.out.println(film.getOriginal_title() + ": " + film.getBudget() + " origin country " + film.getOrigin_country().get(0));
+                budgetFilms.add(film.getOriginal_title() + " " + film.getBudget());
             }
-        });
 
-        for (FilmModel film : films) {
 
-            if (film.isAdult() == true) {
-                adultFilms.add(film);
+            if (findAll().isEmpty()) {
+                return ResponseEntity.ok(new ErrorResponse("Du har inga sparade filmer"));
             }
 
-            if (Objects.equals(film.getOrigin_country().get(0), "US")) {
-                USfilms++;
-            } else {
-                nonUSfilms++;
-            }
 
-            System.out.println(film.getOriginal_title() + ": " + film.getBudget() + " origin country " + film.getOrigin_country().get(0));
-            budgetFilms.add(film.getOriginal_title() + " " + film.getBudget());
+            IntegerResponse intRes = (IntegerResponse) getAverageRuntime().getBody();
+            int y = intRes.getAverageRuntime();
+
+            return ResponseEntity.ok(new ErrorResponse("du har: " + findAll().size() + " filmer sparade." + "/n/r" +
+                    " medellängden på filmerna är: " + y + " minuter, " +
+                    "varav " + adultFilms.size() + " porrfilm(er)" + "budge rank " + budgetFilms + " av dessa är " + USfilms + " amerkikanska och resten " + nonUSfilms + " från andra länder"));
+
+
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(new ErrorResponse("något fel"));
         }
-
-
-        if (findAll().isEmpty()) {
-            return ResponseEntity.ok(new ErrorResponse("Du har inga sparade filmer"));
-        }
-
-
-        IntegerResponse intRes = (IntegerResponse) getAverageRuntime().getBody();
-        int y = intRes.getAverageRuntime();
-
-        return ResponseEntity.ok(new ErrorResponse("du har: " + findAll().size() + " filmer sparade." + "/n/r"+
-                " medellängden på filmerna är: " + y + " minuter, " +
-                "varav " + adultFilms.size() + " porrfilm(er)" + "budge rank " + budgetFilms + " av dessa är " + USfilms + " amerkikanska och resten " + nonUSfilms + " från andra länder"));
-
-
     }
 
 }

@@ -1,11 +1,8 @@
 package com.example.projekt_arbete.controller;
 
-import com.example.projekt_arbete.model.FilmDTO;
 import com.example.projekt_arbete.model.FilmModel;
 import com.example.projekt_arbete.response.ErrorResponse;
-import com.example.projekt_arbete.response.IntegerResponse;
 import com.example.projekt_arbete.response.Response;
-import com.example.projekt_arbete.service.FilmService;
 import com.example.projekt_arbete.service.IFilmService;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,8 +12,6 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 // TODO - More error handling, but probably in FilmService class
 
@@ -28,6 +23,7 @@ public class Controller {
     private String ApiKey;
 
     //private final FilmRepository filmRepository;
+
 
     private final IFilmService filmService;
 
@@ -60,8 +56,11 @@ public class Controller {
                         .bodyToMono(FilmModel.class)
                         .block());
 
-                assert response.isPresent();
-                return ResponseEntity.ok(response.get());
+                if (response.isPresent()) {
+                    return ResponseEntity.ok(response.get());
+                }
+
+                return ResponseEntity.status(404).body(new ErrorResponse("Ingen sån film"));
             } else {
                 return ResponseEntity.status(429).body(new ErrorResponse("för mycket förfråga"));
             }
@@ -93,23 +92,29 @@ public class Controller {
                 //    return ResponseEntity.status(404).body(new ErrorResponse("film inte hittad"));
                 //}
                 // Suggested by IntelliJ, ingen aning hur det fungerar
-                assert response.isPresent();
+                //assert response.isPresent();
 
-                List<FilmModel> allFilms = filmService.findAll();
+                if (response.isPresent()) {
 
-                for (FilmModel film : allFilms) {
-                    System.out.println("for each film.getId(): " + film.getId());
+                    List<FilmModel> allFilms = filmService.findAll();
 
-                    if (film.getId() == response.get().getId()) {
+                    for (FilmModel film : allFilms) {
+                        System.out.println("for each film.getId(): " + film.getId());
 
-                        return ResponseEntity.ok(new ErrorResponse("Filmen redan sparad :) "));
+                        if (film.getId() == response.get().getId()) {
+
+                            return ResponseEntity.ok(new ErrorResponse("Filmen redan sparad :) "));
+                        }
+
                     }
 
+                    filmService.save(response.get());
+
+                    return ResponseEntity.status(201).body(response.get());
                 }
 
-                filmService.save(response.get());
+                return ResponseEntity.status(404).body(new ErrorResponse("film inte funnen"));
 
-                return ResponseEntity.status(201).body(response.get());
             } else {
                 return ResponseEntity.status(429).body(new ErrorResponse("för mycket förfråga"));
             }
@@ -240,7 +245,7 @@ public class Controller {
                                                              @RequestParam(value = "opinion", defaultValue = "false") boolean opinion,
                                                              @RequestParam(value = "description", defaultValue = "false") boolean description) {
 
-        return filmService.getFilmWithAdditoinalInfo(filmId, opinion, description);
+        return filmService.getFilmWithAdditionalInfo(filmId, opinion, description);
 
     }
 

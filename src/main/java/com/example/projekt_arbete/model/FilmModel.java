@@ -53,6 +53,8 @@ public class FilmModel implements Response {
     @Column(length = 1000)
     private String opinion;
 
+    public FilmModel () {}
+
     public boolean isAdult() {
         return adult;
     }

@@ -85,7 +85,7 @@ public class FilmService implements IFilmService{
         Optional<FilmModel> filmOptional = filmRepository.findById(id);
 
         if (filmOptional.isEmpty()) {
-            return ResponseEntity.status(400).body(new ErrorResponse("Film finns inte! <@:)"));
+            return ResponseEntity.status(404).body(new ErrorResponse("Film finns inte! <@:)"));
         }
 
         try {
@@ -168,7 +168,6 @@ public class FilmService implements IFilmService{
         }
     }
 
-    //TODO - Error handle 500 internal error cannot divide by 0 zero DONE!
     @Override
     public ResponseEntity<Response> getAverageRuntime () {
 
@@ -266,7 +265,6 @@ public class FilmService implements IFilmService{
 
     }
 
-    // TODO - clean this mess up, a lot of cleaning left
     @Override
     public ResponseEntity<Response> getInfo() {
 
@@ -310,10 +308,10 @@ public class FilmService implements IFilmService{
 
 
             IntegerResponse intRes = (IntegerResponse) getAverageRuntime().getBody();
-            int y = intRes.getAverageRuntime();
+            int averageRuntime = intRes.getAverageRuntime();
 
             return ResponseEntity.ok(new ErrorResponse("du har: " + findAll().size() + " filmer sparade." + "\n\r" +
-                    " medellängden på filmerna är: " + y + " minuter, " +
+                    " medellängden på filmerna är: " + averageRuntime + " minuter, " +
                     "varav " + adultFilms.size() + " porrfilm(er)" + "budge rank " + budgetFilms + " av dessa är " + USfilms + " amerkikanska och resten " + nonUSfilms + " från andra länder"));
 
 

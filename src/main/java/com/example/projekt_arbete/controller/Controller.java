@@ -2,12 +2,11 @@ package com.example.projekt_arbete.controller;
 
 import com.example.projekt_arbete.model.FilmModel;
 import com.example.projekt_arbete.response.ErrorResponse;
+import com.example.projekt_arbete.response.ListResponse;
 import com.example.projekt_arbete.response.Response;
 import com.example.projekt_arbete.service.IFilmService;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -89,13 +88,6 @@ public class Controller {
                         .bodyToMono(FilmModel.class)
                         .block());
 
-
-                //if (response.isEmpty()) {
-                //    return ResponseEntity.status(404).body(new ErrorResponse("film inte hittad"));
-                //}
-                // Suggested by IntelliJ, ingen aning hur det fungerar
-                //assert response.isPresent();
-
                 if (response.isPresent()) {
 
                     List<FilmModel> allFilms = filmService.findAll();
@@ -128,117 +120,87 @@ public class Controller {
     }
 
     @GetMapping("/savedfilms")
-    public ResponseEntity<List<FilmModel>> getSavedFilms () {
+    public ResponseEntity<Response> getSavedFilms () {
 
-        return ResponseEntity.ok(filmService.findAll());
+        if (rateLimiter.acquirePermission()) {
+            return ResponseEntity.ok(new ListResponse(filmService.findAll()));
+        } else {
+            return ResponseEntity.status(429).body(new ErrorResponse("för många förfrågan"));
+        }
     }
 
-    //TODO - needs more work/error handling Optional?
     @PutMapping("/savedfilms/{id}")
     public ResponseEntity<Response> changeCountryOfOrigin (@PathVariable("id") int id, @RequestBody String country) {
 
-        return filmService.changeCountryOfOrigin(id, country);
-
-        //List<String> newCountryOfOrigins = new ArrayList<>() {};
-        //newCountryOfOrigins.add(country);
-        //assert filmService.findById(id).isPresent();
-        //filmService.findById(id).get().setOrigin_country(newCountryOfOrigins);
-        //filmService.save(filmService.findById(id).get());
-        //return ResponseEntity.ok(filmService.findById(id).get());
+        if (rateLimiter.acquirePermission()) {
+            return filmService.changeCountryOfOrigin(id, country);
+        } else {
+            return ResponseEntity.status(429).body(new ErrorResponse("för många förfrågan"));
+        }
     }
 
     @PutMapping("/savedfilms/opinion/{id}")
     public ResponseEntity<String> addOpinion (@PathVariable("id") Integer id, @RequestBody String opinion) {
 
-        return filmService.addOpinion(id, opinion);
-
+        if (rateLimiter.acquirePermission()) {
+            return filmService.addOpinion(id, opinion);
+        } else {
+            return ResponseEntity.status(429).body("För många förfrågan");
+        }
     }
 
     @DeleteMapping("/savedfilms/{id}")
     public ResponseEntity<String> deleteFilmById (@PathVariable("id") Integer id) throws Exception {
-        return filmService.deleteById(id);
 
-//        try {
-//
-//
-//            return ResponseEntity.ok("Film with id "+ id + " Deleted");
-//        } catch (Exception e) {
-//            return ResponseEntity.status(404).body("No film with id:" + id + " found");
-//        }
-
+        if (rateLimiter.acquirePermission()) {
+            return filmService.deleteById(id);
+        } else {
+            return ResponseEntity.status(429).body("för många förfrågan");
+        }
     }
 
-    //TODO - Error handle 500 internal error cannot divide by 0 zero DONE!
     @GetMapping("/savedfilms/runtime")
     public ResponseEntity<Response> getAverageRuntime () {
 
-        return filmService.getAverageRuntime();
+        if (rateLimiter.acquirePermission()) {
+            return filmService.getAverageRuntime();
+        } else {
+            return ResponseEntity.status(429).body(new ErrorResponse("för många förfrågan"));
+        }
     }
 
     // example url: "https://localhost:8443/films/search?filmName=Reservoir%20Dogs"
     @GetMapping("/search")
     public ResponseEntity<Response> searchByTitle (@RequestParam String filmName) {
 
-       return filmService.searchFilmByName(filmName);
+        if (rateLimiter.acquirePermission()) {
+            return filmService.searchFilmByName(filmName);
+        } else {
+            return ResponseEntity.status(429).body(new ErrorResponse("för många förfrågan"));
+        }
     }
 
-    //TODO - Error handle and move code to relevant FilmService method - DONE
     //Example url: https://localhost:8443/films/country/US?title=Fight%20Club
     @GetMapping("/country/{country}")
     public ResponseEntity<Response> getFilmsByCountry (@PathVariable("country") String country,
                                                        @RequestParam(value = "title", required = false) String title) {
 
-        return filmService.getFilmByCountry(country, title);
+        if (rateLimiter.acquirePermission()) {
+            return filmService.getFilmByCountry(country, title);
+        } else {
+            return ResponseEntity.status(429).body(new ErrorResponse("för många förfrågan"));
+        }
     }
 
 
     @GetMapping("/info")
     public ResponseEntity<Response> getInfo () {
 
-        return filmService.getInfo();
-//        int USfilms = 0;
-//        int nonUSfilms = 0;
-//
-//        ArrayList<FilmModel> adultFilms = new ArrayList<>();
-//        ArrayList<String> budgetFilms = new ArrayList<>();
-//
-//        List<FilmModel> films = filmService.findAll();
-//        Collections.sort(films, new Comparator<FilmModel>() {
-//            @Override
-//            public int compare(FilmModel o1, FilmModel o2) {
-//                return Integer.compare(o1.getBudget(), o2.getBudget());
-//            }
-//        });
-//
-//        for (FilmModel film : films) {
-//
-//            if (film.isAdult() == true) {
-//                adultFilms.add(film);
-//            }
-//
-//            if (Objects.equals(film.getOrigin_country().get(0), "US")) {
-//                USfilms++;
-//            } else {
-//                nonUSfilms++;
-//            }
-//
-//            System.out.println(film.getOriginal_title() + ": " + film.getBudget() + " origin country " + film.getOrigin_country().get(0));
-//            budgetFilms.add(film.getOriginal_title() + " " + film.getBudget());
-//        }
-//
-//
-//        if (filmService.findAll().isEmpty()) {
-//            return ResponseEntity.ok(new ErrorResponse("Du har inga sparade filmer"));
-//        }
-//
-//
-//        IntegerResponse intRes = (IntegerResponse) filmService.getAverageRuntime().getBody();
-//        int y = intRes.getAverageRuntime();
-//
-//        return ResponseEntity.ok(new ErrorResponse("du har: " + filmService.findAll().size() + " filmer sparade." +
-//                " medellängden på filmerna är: " + y + " minuter, " +
-//                "varav " + adultFilms.size() + " porrfilm(er)" + "budge rank " + budgetFilms + " av dessa är " + USfilms + " amerkikanska och resten " + nonUSfilms + " från andra länder"));
-
+        if (rateLimiter.acquirePermission()) {
+            return filmService.getInfo();
+        } else {
+            return ResponseEntity.status(429).body(new ErrorResponse("för många förfrågan"));
+        }
     }
 
     @GetMapping("/getfilm/{filmId}")
@@ -246,9 +208,11 @@ public class Controller {
     public ResponseEntity<Response> getFilmWithAdditionalInfo (@PathVariable("filmId") int filmId,
                                                              @RequestParam(value = "opinion", defaultValue = "false") boolean opinion,
                                                              @RequestParam(value = "description", defaultValue = "false") boolean description) {
-
-        return filmService.getFilmWithAdditionalInfo(filmId, opinion, description);
-
+        if (rateLimiter.acquirePermission()) {
+            return filmService.getFilmWithAdditionalInfo(filmId, opinion, description);
+        } else {
+            return ResponseEntity.status(429).body(new ErrorResponse("för många förfrågan"));
+        }
     }
 
 
